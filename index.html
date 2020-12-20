@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D-Map</title>
+</head>
+
+<script src="js/jquery-3.5.1.js"></script>
+<script src="js/jquery.md5.js"></script>
+<script src="js/tween.umd.js"></script>
+<script src="js/layer/layer.js"></script>
+<script src="sdk/three.min.js"></script>
+<script src="sdk/OrbitControls.js"></script>
+<script src="sdk/CSS2DRenderer.js"></script>
+<script src="sdk/CollageLoader.js"></script>
+<script src="sdk/FBXLoader.js"></script>
+<script src="sdk/OBJLoader.js"></script>
+<script src="sdk/inflate.min.js"></script>
+<script src="sdk/stats.min.js"></script>
+<script src="sdk/LineSegmentsGeometry.js"></script>
+<script src="sdk/LineGeometry.js"></script>
+<script src="sdk/LineSegments2.js"></script>
+<script src="sdk/LineMaterial.js"></script>
+<script src="sdk/Line2.js"></script>
+<script src="js/QmMap-config.js"></script>
+<script src="js/QmSdk.js"></script>
+<body>
+<link rel="stylesheet" href="css/QmMapCss.css" type="text/css">
+
+
+<div id="mapContainer"></div>
+<div id="shopInfo" style="visibility: hidden">
+    <div id="shopName"></div>
+    <div class="shop-path" id="mapGo">导航</div>  <!--寻路id:mapGo-->
+    <div class="shop-detail-div" id="shopDetail"><!--店铺相请id:shopDetail-->
+        <p>店铺详情</p>
+        <div class="ellipsis-div">
+            <p class="shop-ellipsis"></p>
+        </div>
+    </div>
+    <p class="shop-square"></p>
+</div>
+
+
+
+<p style="width: 100px;height:30px;background:linear-gradient(270deg,#8e92b2, #6e708c);
+    border-radius: 20% 20% 20% 20%/40% 40% 40% 40%;
+text-align: center;line-height: 30px;color: white;font-weight: bold;font-size: 20px;display:none" id="findMap">GO</p>
+
+
+<script>
+    /*
+    * 初始化地图和数据new地图:楼层，点位，角度;
+    * */
+    let map = new jsMap(2, 10, 90, new Config(), event => {
+
+
+        /*
+        * 通知前端初始化完毕，调用的方法在config文件配置
+        **/
+        mapInit();
+
+    });
+
+    let returnPath = null;
+
+    //地图box弹框点击Go
+    function mapGo(code) {
+
+        let findPath;
+        for (let shop of map.shopData) {
+            if (code === shop.code) {
+                findPath = map.findPath(map.myFloor, map.myPoint, map.sceneNum, Number(shop['yaxis']));
+                console.log('返回路径', findPath);
+                if (findPath.niceMode) {
+                    returnPath = findPath;
+                    map.go(returnPath.niceMode, function () {
+                        console.log('前端寻路结束!');
+                    });
+                }
+            }
+        }
+    }
+
+    function findFacilities(index) {
+        let findFacilities = map[map.options.defaultSet.findFacilities.findObj][index];
+        if (findFacilities.path.niceMode) {
+            returnPath = findFacilities.path;
+            map.go(returnPath.niceMode, function () {
+                console.log('前端寻路结束!');
+            });
+        }
+    }
+
+    function shopDetail(code) {
+        console.log(code)
+
+
+    }
+
+    function changeNavMode(type) {
+        if (!returnPath) {
+            alert('请先选择导航店');
+            return;
+        }
+        let navPath;
+        switch (type) {
+            case 0://最优线路
+                navPath = returnPath['niceMode'];
+                break;
+            case 1://电梯模式
+                navPath = returnPath['stairMode'];
+                break;
+            case 2:
+                navPath = returnPath['liftMode'];
+                break;
+        }
+        if (!navPath) {
+            alert('没有该模式');
+            return;
+        }
+        map.go(navPath, function () {
+            console.log('前端结束');
+        });
+
+
+    }
+
+    function mapInit() {
+        console.log('初始化完成')
+    }
+
+
+</script>
+
+</body>
+</html>
